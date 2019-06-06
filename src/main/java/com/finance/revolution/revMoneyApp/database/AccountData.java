@@ -79,7 +79,7 @@ public class AccountData {
 		}
 	}
 
-	public long insertAccount(Account account) throws Exception {
+	public synchronized long insertAccount(Account account) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
@@ -106,7 +106,7 @@ public class AccountData {
 		}
 	}
 
-	public long deleteAccount(String phoneNumber) throws Exception {
+	public synchronized long deleteAccount(String phoneNumber) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
@@ -130,7 +130,7 @@ public class AccountData {
 		}
 	}
 
-	public Account updateAccountBalance(String phoneNumber, BigDecimal amount, String operation) throws Exception {
+	public synchronized Account updateAccountBalance(String phoneNumber, BigDecimal amount, String operation) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -168,7 +168,7 @@ public class AccountData {
 		}
 	}
 
-	public boolean transferAmount(Transaction transaction) throws Exception {
+	public synchronized boolean transferAmount(Transaction transaction) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		Account fromAccount = null;
