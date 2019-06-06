@@ -1,0 +1,21 @@
+--This script is used to create database schema
+DROP TABLE IF EXISTS MoneyUser;
+
+CREATE TABLE MoneyUser (UserId long PRIMARY KEY AUTO_INCREMENT NOT NULL,
+PhoneNumber VARCHAR(30) UNIQUE NOT NULL,
+UserName VARCHAR(30) NOT NULL,
+EmailId VARCHAR(30) );
+
+
+
+DROP TABLE IF EXISTS MoneyAccount;
+
+CREATE TABLE MoneyAccount (AccountId long PRIMARY KEY AUTO_INCREMENT NOT NULL,
+Balance DECIMAL(19,4) NOT NULL,
+Currency VARCHAR(30) NOT NULL,
+PhoneNumber VARCHAR(30) UNIQUE NOT NULL,
+FOREIGN KEY(PhoneNumber) REFERENCES MoneyUser(PhoneNumber) ON DELETE CASCADE,
+);
+
+
+
