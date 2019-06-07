@@ -35,7 +35,7 @@ public class AccountService {
 		return accountData.getAccountById(phoneNumber);
 	}
 
-	public long createAccount(Account account) throws Exception {
+	public synchronized long createAccount(Account account) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = userService.getUserByNo(account.getPhoneNumber());
 		Account accountExists = getAccountByNo(account.getPhoneNumber());
@@ -59,7 +59,7 @@ public class AccountService {
 		return accountData.getAccountById(phoneNumber);
 	}
 
-	public Account withdraw(String phoneNumber, BigDecimal amount) throws Exception {
+	public synchronized Account withdraw(String phoneNumber, BigDecimal amount) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Account account = getAccountByNo(phoneNumber);
 		if(account==null){
@@ -71,7 +71,7 @@ public class AccountService {
 		return accountData.updateAccountBalance(phoneNumber, amount, "DEDUCT");		
 	}
 
-	public boolean delete(String phoneNumber) throws Exception {
+	public synchronized boolean delete(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = userService.getUserByNo(phoneNumber);
 		if(user==null){
