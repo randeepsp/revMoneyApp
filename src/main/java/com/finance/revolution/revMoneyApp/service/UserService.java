@@ -23,7 +23,7 @@ public class UserService {
 		return userData.getAllUsers();
 	}
 
-	public long createUser(User user) throws Exception {
+	public synchronized long createUser(User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());		User userExists = getUserByNo(user.getPhoneNumber());
 		if(userExists!=null){
 			throw new Exception("User already exists"); 
@@ -32,7 +32,7 @@ public class UserService {
 		return id;
 	}
 
-	public User updateUser(String phoneNumber, User user) throws Exception {
+	public synchronized User updateUser(String phoneNumber, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User userExists = getUserByNo(phoneNumber);
 		if(userExists==null){
@@ -41,7 +41,7 @@ public class UserService {
 		return userData.updateUserById(userExists.getUserId(), user);
 	}
 
-	public boolean deleteUser(String phoneNumber) throws Exception {
+	public synchronized boolean deleteUser(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = getUserByNo(phoneNumber);
 		if(user==null){
