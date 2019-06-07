@@ -10,7 +10,7 @@ public class TransactionService {
 
 	AccountData accountData = new AccountData();
 
-	public boolean transfer(Transaction transaction) throws Exception {
+	public synchronized boolean transfer(Transaction transaction) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		String currencyType = transaction.getCurrencyType();
 		try {
