@@ -1,6 +1,7 @@
 package com.finance.revolution.revMoneyApp.resource;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;

@@ -121,7 +121,7 @@ public class UserData {
 		}
 	}
 
-	public synchronized long insertUser(User user) throws Exception {
+	public  long insertUser(User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		LOGGER.info("UD - creating user with " + user.getPhoneNumber() + " " + user.getUserName() + " "
 				+ user.getEmailId());
@@ -148,7 +148,7 @@ public class UserData {
 		}
 	}
 
-	public synchronized long deleteUser(String phoneNumber) throws Exception {
+	public  long deleteUser(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
@@ -170,7 +170,7 @@ public class UserData {
 		}
 	}
 
-	public synchronized User updateUser(String phoneNumber, User user) throws Exception {
+	public  User updateUser(String phoneNumber, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
@@ -199,7 +199,7 @@ public class UserData {
 		}
 	}
 
-	public synchronized User updateUserById(long id, User user) throws Exception {
+	public  User updateUserById(long id, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;

@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.finance.revolution.revMoneyApp.database.AccountData;
+import com.finance.revolution.revMoneyApp.database.DatabaseElements;
 import com.finance.revolution.revMoneyApp.model.Account;
 import com.finance.revolution.revMoneyApp.model.User;
 
@@ -35,7 +36,7 @@ public class AccountService {
 		return accountData.getAccountById(phoneNumber);
 	}
 
-	public synchronized long createAccount(Account account) throws Exception {
+	public long createAccount(Account account) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = userService.getUserByNo(account.getPhoneNumber());
 		Account accountExists = getAccountByNo(account.getPhoneNumber());
@@ -55,11 +56,11 @@ public class AccountService {
 		if(account==null){
 			throw new Exception("Account does not exist"); 
 		}
-		accountData.updateAccountBalance(phoneNumber, amount, "ADD");
+		accountData.updateAccountBalance(phoneNumber, amount, DatabaseElements.ACCOUNT_ADD);
 		return accountData.getAccountById(phoneNumber);
 	}
 
-	public synchronized Account withdraw(String phoneNumber, BigDecimal amount) throws Exception {
+	public Account withdraw(String phoneNumber, BigDecimal amount) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Account account = getAccountByNo(phoneNumber);
 		if(account==null){
@@ -68,10 +69,10 @@ public class AccountService {
 		if(account.getBalance().compareTo(amount)<0){
 			throw new Exception("Insufficient funds"); 
 		}
-		return accountData.updateAccountBalance(phoneNumber, amount, "DEDUCT");		
+		return accountData.updateAccountBalance(phoneNumber, amount, DatabaseElements.ACCOUNT_DEDUCT);		
 	}
 
-	public synchronized boolean delete(String phoneNumber) throws Exception {
+	public boolean delete(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = userService.getUserByNo(phoneNumber);
 		if(user==null){

@@ -10,15 +10,13 @@ public class TransactionService {
 
 	AccountData accountData = new AccountData();
 
-	public synchronized boolean transfer(Transaction transaction) throws Exception {
+	public boolean transfer(Transaction transaction) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		String currencyType = transaction.getCurrencyType();
 		try {
 			accountData.transferAmount(transaction);
 			return true;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 			throw new Exception(e.getMessage());
 		}
 	}

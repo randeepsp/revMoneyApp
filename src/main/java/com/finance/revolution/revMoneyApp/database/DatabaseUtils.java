@@ -28,7 +28,7 @@ public class DatabaseUtils {
 
 	}
 
-	public synchronized void buildTables() {
+	public void buildTables() {
 		LOGGER.info("Creating User and Account tables ");
 		Connection conn = null;
 		try {

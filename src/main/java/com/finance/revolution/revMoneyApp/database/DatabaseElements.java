@@ -3,7 +3,7 @@ package com.finance.revolution.revMoneyApp.database;
 public interface DatabaseElements {
 
 	static final String H2_DRIVER = "org.h2.Driver";
-	static final String H2_CONNECTION_URL = "jdbc:h2:mem:moneyApp;TRACE_LEVEL_FILE=2;DB_CLOSE_DELAY=-1";
+	static final String H2_CONNECTION_URL = "jdbc:h2:mem:moneyApp;TRACE_LEVEL_FILE=2;LOCK_MODE=3;DB_CLOSE_DELAY=-1";
 	static final String H2_USER = "sa";
 	static final String H2_PASSWORD = "";
 
@@ -23,4 +23,6 @@ public interface DatabaseElements {
 	static final String ACCOUNT_GET_ALL = "SELECT * FROM MoneyAccount";
 	static final String ACCOUNT_DELETE = "DELETE FROM MoneyAccount WHERE PhoneNumber = ?";
 
+	static final String ACCOUNT_DEDUCT = "DEDUCT";
+	static final String ACCOUNT_ADD = "ADD";
 }

@@ -79,7 +79,7 @@ public class AccountData {
 		}
 	}
 
-	public synchronized long insertAccount(Account account) throws Exception {
+	public long insertAccount(Account account) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
@@ -106,7 +106,7 @@ public class AccountData {
 		}
 	}
 
-	public synchronized long deleteAccount(String phoneNumber) throws Exception {
+	public long deleteAccount(String phoneNumber) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
@@ -130,15 +130,16 @@ public class AccountData {
 		}
 	}
 
-	public synchronized Account updateAccountBalance(String phoneNumber, BigDecimal amount, String operation) throws Exception {
+	public Account updateAccountBalance(String phoneNumber, BigDecimal amount, String operation) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		LOGGER.debug("Attempting to "+operation+" for amount:"+amount+" of account with phone number ->"+phoneNumber);
+		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
+				+ phoneNumber);
 		try {
 			Account checkForBalance = getAccountById(phoneNumber);
 			BigDecimal balance = checkForBalance.getBalance();
-			LOGGER.debug("Current balance ->"+balance);
+			LOGGER.debug("Current balance ->" + balance);
 			if (operation.equals("ADD")) {
 				balance = balance.add(amount);
 			}
@@ -168,7 +169,46 @@ public class AccountData {
 		}
 	}
 
-	public synchronized boolean transferAmount(Transaction transaction) throws Exception {
+	public Account updateAccountBalance(String phoneNumber, BigDecimal amount, String operation, Connection conn)
+			throws Exception {
+		PreparedStatement prepStmt = null;
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
+				+ phoneNumber);
+		try {
+			Account checkForBalance = getAccountById(phoneNumber);
+			BigDecimal balance = checkForBalance.getBalance();
+			LOGGER.debug("Current balance ->" + balance);
+			if (operation.equals("ADD")) {
+				balance = balance.add(amount);
+			}
+			if (operation.equals("DEDUCT")) {
+				balance = balance.subtract(amount);
+			}
+			if (balance.compareTo(BigDecimal.ZERO) < 0)
+				throw new Exception("Failed due to insufficient balance");
+			conn = DatabaseUtils.getConnection();
+			prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_UPDATE_BALANCE);
+			prepStmt.setString(2, phoneNumber);
+			prepStmt.setBigDecimal(1, balance);
+			int rowsChanged = prepStmt.executeUpdate();
+			if (rowsChanged == 0) {
+				LOGGER.error("updateAccountBalance(): " + operation + " failed");
+				throw new Exception("updateAccountBalance(): " + operation + " failed");
+			}
+			return getAccountById(phoneNumber);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new Exception("updateAccountBalance(): failed due to unknown reasons");
+		} finally {
+			DbUtils.closeQuietly(prepStmt);
+			DbUtils.closeQuietly(conn);
+			LOGGER.debug("Exiting " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		}
+	}
+
+	public boolean transferAmount(Transaction transaction) throws Exception {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		Account fromAccount = null;
@@ -178,17 +218,24 @@ public class AccountData {
 		ResultSet rs = null;
 		String errorMsg = "";
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		LOGGER.debug("Transfer amount "+transaction.getAmount()+" from "+transaction.getFromAccount()+" to "+transaction.getToAccount());
+		LOGGER.debug("Transfer amount " + transaction.getAmount() + " from " + transaction.getFromAccount() + " to "
+				+ transaction.getToAccount());
 		try {
 			fromAccount = getAccountById(transaction.getFromAccount());
+			if ((fromAccount.getBalance().subtract(transaction.getAmount())).compareTo(new BigDecimal(0)) < 0)
+				throw new Exception("Failed due to insufficient balance");
 			toAccount = getAccountById(transaction.getToAccount());
 			if (fromAccount == null || toAccount == null)
 				throw new Exception("no such account");
 
-			updateAccountBalance(fromAccount.getPhoneNumber(), transaction.getAmount(), "DEDUCT");
+			conn = DatabaseUtils.getConnection();
+			conn.setAutoCommit(false);
+			updateAccountBalance(fromAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_DEDUCT,
+					conn);
 
-			updateAccountBalance(toAccount.getPhoneNumber(), transaction.getAmount(), "ADD");
-
+			updateAccountBalance(toAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_ADD,
+					conn);
+			conn.commit();
 			return true;
 
 		} catch (SQLException e) {
