@@ -1,1 +1,5 @@
 target/*
+money-operation.log
+.classpath
+.project
+.settings/*
