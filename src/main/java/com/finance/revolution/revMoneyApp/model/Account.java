@@ -12,6 +12,7 @@ public class Account {
 	private long accountId;
 	private String PhoneNumber;
 	private BigDecimal balance;
+	//conversion of currency to be handled
 	private String currencyType;
 
 	public Account() {

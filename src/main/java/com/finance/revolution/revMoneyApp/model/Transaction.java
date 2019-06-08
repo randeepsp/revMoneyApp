@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Transaction {
 	
+	//conversion of currency to be handled
 	private String currencyType;
 	private BigDecimal amount;
 	private String fromAccount;

@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class User {
 
 	private long userId;
+	//phoneNumber parsing to be handled
 	private String phoneNumber;
 	private String userName;
 	private String emailId;
