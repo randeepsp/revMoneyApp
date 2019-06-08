@@ -224,31 +224,45 @@ public class AccountData {
 		PreparedStatement prepStmt = null;
 		Account fromAccount = null;
 		Account toAccount = null;
-		Currency fromCurrency = null;
-		Currency toCurrency = null;
-		ResultSet rs = null;
-		String errorMsg = "";
+		String fromCurrency = null;
+		String toCurrency = null;
+		BigDecimal withdrawAmount = null;
+		BigDecimal depositAmount = null;
+
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		LOGGER.debug("Transfer amount " + transaction.getAmount() + " from " + transaction.getFromAccount() + " to "
 				+ transaction.getToAccount());
 		try {
 			fromAccount = getAccountById(transaction.getFromAccount());
-			if ((fromAccount.getBalance().subtract(transaction.getAmount())).compareTo(new BigDecimal(0)) < 0)
-				throw new Exception("Failed due to insufficient balance");
 			toAccount = getAccountById(transaction.getToAccount());
+			// check if both account exists
 			if (fromAccount == null || toAccount == null)
 				throw new Exception("no such account");
+
+			// get currency types
+			fromCurrency = fromAccount.getCurrencyType();
+			toCurrency = toAccount.getCurrencyType();
+
+			// convert amount to fromAccount currency type and toAccount currencyType
+			withdrawAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
+					Currency.getInstance(fromCurrency), transaction.getAmount());
+			depositAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
+					Currency.getInstance(toCurrency), transaction.getAmount());
+
+			if ((fromAccount.getBalance().subtract(withdrawAmount)).compareTo(new BigDecimal(0)) < 0)
+				throw new Exception("Failed due to insufficient balance");
+
 			fromAccountCL = fromAccount;
 			toAccountCL = toAccount;
 			conn = DatabaseUtils.getConnection();
 			conn.setAutoCommit(false);
+
 			synchronized (fromAccountCL) {
-				updateAccountBalance(fromAccount.getPhoneNumber(), transaction.getAmount(),
-						DatabaseElements.ACCOUNT_DEDUCT, conn);
+				updateAccountBalance(fromAccount.getPhoneNumber(), withdrawAmount, DatabaseElements.ACCOUNT_DEDUCT,
+						conn);
 			}
 			synchronized (toAccountCL) {
-				updateAccountBalance(toAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_ADD,
-						conn);
+				updateAccountBalance(toAccount.getPhoneNumber(), depositAmount, DatabaseElements.ACCOUNT_ADD, conn);
 			}
 			conn.commit();
 			return true;
