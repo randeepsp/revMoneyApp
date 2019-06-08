@@ -19,6 +19,9 @@ public class AccountData {
 
 	private static final Logger LOGGER = Logger.getLogger(AccountData.class);
 	UserData userData = new UserData();
+	static Account accountCL;
+	static Account fromAccountCL;
+	static Account toAccountCL;
 
 	public List<Account> getAllAccounts() throws Exception {
 
@@ -85,15 +88,20 @@ public class AccountData {
 		ResultSet rs = null;
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		LOGGER.debug("Attempting to insert " + account);
+		accountCL = account;
 
 		try {
 			conn = DatabaseUtils.getConnection();
+			int rowsChanged;
 			prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_CREATE);
-			prepStmt.setString(1, account.getPhoneNumber());
-			prepStmt.setBigDecimal(2, account.getBalance());
-			prepStmt.setString(3, account.getCurrencyType());
-			int rowsChanged = prepStmt.executeUpdate();
-			LOGGER.debug("No of rows changed -> " + rowsChanged);
+			synchronized (accountCL) {
+
+				prepStmt.setString(1, account.getPhoneNumber());
+				prepStmt.setBigDecimal(2, account.getBalance());
+				prepStmt.setString(3, account.getCurrencyType());
+				rowsChanged = prepStmt.executeUpdate();
+				LOGGER.debug("No of rows changed -> " + rowsChanged);
+			}
 			return rowsChanged;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -137,28 +145,30 @@ public class AccountData {
 		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
 				+ phoneNumber);
 		try {
-			Account checkForBalance = getAccountById(phoneNumber);
-			BigDecimal balance = checkForBalance.getBalance();
-			LOGGER.debug("Current balance ->" + balance);
-			if (operation.equals("ADD")) {
-				balance = balance.add(amount);
-			}
-			if (operation.equals("DEDUCT")) {
-				balance = balance.subtract(amount);
-			}
-			if (balance.compareTo(BigDecimal.ZERO) < 0)
-				throw new Exception("Failed due to insufficient balance");
-			conn = DatabaseUtils.getConnection();
-			prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_UPDATE_BALANCE);
-			prepStmt.setString(2, phoneNumber);
-			prepStmt.setBigDecimal(1, balance);
-			int rowsChanged = prepStmt.executeUpdate();
-			if (rowsChanged == 0) {
-				LOGGER.error("updateAccountBalance(): " + operation + " failed");
-				throw new Exception("updateAccountBalance(): " + operation + " failed");
-			}
-			return getAccountById(phoneNumber);
+			accountCL = getAccountById(phoneNumber);
+			BigDecimal balance = accountCL.getBalance();
+			synchronized (accountCL) {
 
+				LOGGER.debug("Current balance ->" + balance);
+				if (operation.equals("ADD")) {
+					balance = balance.add(amount);
+				}
+				if (operation.equals("DEDUCT")) {
+					balance = balance.subtract(amount);
+				}
+				if (balance.compareTo(BigDecimal.ZERO) < 0)
+					throw new Exception("Failed due to insufficient balance");
+				conn = DatabaseUtils.getConnection();
+				prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_UPDATE_BALANCE);
+				prepStmt.setString(2, phoneNumber);
+				prepStmt.setBigDecimal(1, balance);
+				int rowsChanged = prepStmt.executeUpdate();
+				if (rowsChanged == 0) {
+					LOGGER.error("updateAccountBalance(): " + operation + " failed");
+					throw new Exception("updateAccountBalance(): " + operation + " failed");
+				}
+				return getAccountById(phoneNumber);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("updateAccountBalance(): failed due to unknown reasons");
@@ -176,28 +186,29 @@ public class AccountData {
 		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
 				+ phoneNumber);
 		try {
-			Account checkForBalance = getAccountById(phoneNumber);
-			BigDecimal balance = checkForBalance.getBalance();
-			LOGGER.debug("Current balance ->" + balance);
-			if (operation.equals("ADD")) {
-				balance = balance.add(amount);
+			accountCL = getAccountById(phoneNumber);
+			BigDecimal balance = accountCL.getBalance();
+			synchronized (accountCL) {
+				LOGGER.debug("Current balance ->" + balance);
+				if (operation.equals("ADD")) {
+					balance = balance.add(amount);
+				}
+				if (operation.equals("DEDUCT")) {
+					balance = balance.subtract(amount);
+				}
+				if (balance.compareTo(BigDecimal.ZERO) < 0)
+					throw new Exception("Failed due to insufficient balance");
+				conn = DatabaseUtils.getConnection();
+				prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_UPDATE_BALANCE);
+				prepStmt.setString(2, phoneNumber);
+				prepStmt.setBigDecimal(1, balance);
+				int rowsChanged = prepStmt.executeUpdate();
+				if (rowsChanged == 0) {
+					LOGGER.error("updateAccountBalance(): " + operation + " failed");
+					throw new Exception("updateAccountBalance(): " + operation + " failed");
+				}
+				return getAccountById(phoneNumber);
 			}
-			if (operation.equals("DEDUCT")) {
-				balance = balance.subtract(amount);
-			}
-			if (balance.compareTo(BigDecimal.ZERO) < 0)
-				throw new Exception("Failed due to insufficient balance");
-			conn = DatabaseUtils.getConnection();
-			prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_UPDATE_BALANCE);
-			prepStmt.setString(2, phoneNumber);
-			prepStmt.setBigDecimal(1, balance);
-			int rowsChanged = prepStmt.executeUpdate();
-			if (rowsChanged == 0) {
-				LOGGER.error("updateAccountBalance(): " + operation + " failed");
-				throw new Exception("updateAccountBalance(): " + operation + " failed");
-			}
-			return getAccountById(phoneNumber);
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("updateAccountBalance(): failed due to unknown reasons");
@@ -227,14 +238,18 @@ public class AccountData {
 			toAccount = getAccountById(transaction.getToAccount());
 			if (fromAccount == null || toAccount == null)
 				throw new Exception("no such account");
-
+			fromAccountCL = fromAccount;
+			toAccountCL = toAccount;
 			conn = DatabaseUtils.getConnection();
 			conn.setAutoCommit(false);
-			updateAccountBalance(fromAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_DEDUCT,
-					conn);
-
-			updateAccountBalance(toAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_ADD,
-					conn);
+			synchronized (fromAccountCL) {
+				updateAccountBalance(fromAccount.getPhoneNumber(), transaction.getAmount(),
+						DatabaseElements.ACCOUNT_DEDUCT, conn);
+			}
+			synchronized (toAccountCL) {
+				updateAccountBalance(toAccount.getPhoneNumber(), transaction.getAmount(), DatabaseElements.ACCOUNT_ADD,
+						conn);
+			}
 			conn.commit();
 			return true;
 

@@ -14,6 +14,7 @@ import com.finance.revolution.revMoneyApp.model.User;
 
 public class UserData {
 	private static final Logger LOGGER = Logger.getLogger(UserData.class);
+	static User userCL;
 
 	public List<User> getAllUsers() throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -121,24 +122,26 @@ public class UserData {
 		}
 	}
 
-	public  long insertUser(User user) throws Exception {
+	public long insertUser(User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		LOGGER.info("UD - creating user with " + user.getPhoneNumber() + " " + user.getUserName() + " "
 				+ user.getEmailId());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
+		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
+			synchronized (userCL) {
+				prepStmt = conn.prepareStatement(DatabaseElements.USER_INSERT);
+				prepStmt.setString(1, user.getPhoneNumber());
+				prepStmt.setString(2, user.getUserName());
+				prepStmt.setString(3, user.getEmailId());
 
-			prepStmt = conn.prepareStatement(DatabaseElements.USER_INSERT);
-			prepStmt.setString(1, user.getPhoneNumber());
-			prepStmt.setString(2, user.getUserName());
-			prepStmt.setString(3, user.getEmailId());
-
-			int rowsChanged = prepStmt.executeUpdate();
-			LOGGER.debug("rowsChanged" + rowsChanged);
-			return rowsChanged;
+				int rowsChanged = prepStmt.executeUpdate();
+				LOGGER.debug("rowsChanged" + rowsChanged);
+				return rowsChanged;
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("insert failed due to");
@@ -148,11 +151,11 @@ public class UserData {
 		}
 	}
 
-	public  long deleteUser(String phoneNumber) throws Exception {
+	public long deleteUser(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
-		LOGGER.info("delete user with phonenumber ->"+phoneNumber);
+		LOGGER.info("delete user with phonenumber ->" + phoneNumber);
 		try {
 			conn = DatabaseUtils.getConnection();
 			prepStmt = conn.prepareStatement(DatabaseElements.USER_DELETE);
@@ -170,7 +173,7 @@ public class UserData {
 		}
 	}
 
-	public  User updateUser(String phoneNumber, User user) throws Exception {
+	public User updateUser(String phoneNumber, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
@@ -178,17 +181,20 @@ public class UserData {
 		String errorMsg = "";
 		LOGGER.info("UD - updating user with " + user.getPhoneNumber() + " " + user.getUserName() + " "
 				+ user.getEmailId());
+		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
-			prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
-			prepStmt.setString(1, user.getPhoneNumber());
-			prepStmt.setString(2, user.getUserName());
-			prepStmt.setString(3, user.getEmailId());
-			prepStmt.setLong(4, user.getUserId());
-			int rowsChanged = prepStmt.executeUpdate();
-			LOGGER.debug("rowsChanged" + rowsChanged);
-			return getUserByNo(phoneNumber);
+			synchronized (userCL) {
 
+				prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
+				prepStmt.setString(1, user.getPhoneNumber());
+				prepStmt.setString(2, user.getUserName());
+				prepStmt.setString(3, user.getEmailId());
+				prepStmt.setLong(4, user.getUserId());
+				int rowsChanged = prepStmt.executeUpdate();
+				LOGGER.debug("rowsChanged" + rowsChanged);
+				return getUserByNo(phoneNumber);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("UPDATE failed due to");
@@ -199,24 +205,25 @@ public class UserData {
 		}
 	}
 
-	public  User updateUserById(long id, User user) throws Exception {
+	public User updateUserById(long id, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
 		String errorMsg = "";
-
+		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
-			prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
-			prepStmt.setString(1, user.getPhoneNumber());
-			prepStmt.setString(2, user.getUserName());
-			prepStmt.setString(3, user.getEmailId());
-			prepStmt.setLong(4, id);
-			int rowsChanged = prepStmt.executeUpdate();
-			LOGGER.debug("rowsChanged" + rowsChanged);
-			return getUserById(id);
-
+			synchronized (userCL) {
+				prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
+				prepStmt.setString(1, user.getPhoneNumber());
+				prepStmt.setString(2, user.getUserName());
+				prepStmt.setString(3, user.getEmailId());
+				prepStmt.setLong(4, id);
+				int rowsChanged = prepStmt.executeUpdate();
+				LOGGER.debug("rowsChanged" + rowsChanged);
+				return getUserById(id);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("UPDATE failed due to");
