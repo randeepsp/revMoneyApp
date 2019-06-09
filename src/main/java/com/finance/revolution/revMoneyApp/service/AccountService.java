@@ -59,6 +59,9 @@ public class AccountService {
 		if (account == null) {
 			throw new Exception("Account does not exist");
 		}
+		if (amount.compareTo(new BigDecimal(0))<0) {
+			throw new Exception("Amount cannot be less than 0");
+		}
 		synchronized (account) {
 			accountData.updateAccountBalance(phoneNumber, amount, DatabaseElements.ACCOUNT_ADD);
 			return accountData.getAccountById(phoneNumber);
@@ -71,6 +74,9 @@ public class AccountService {
 
 		if (account == null) {
 			throw new Exception("Account does not exist");
+		}
+		if (amount.compareTo(new BigDecimal(0))<0) {
+			throw new Exception("Amount cannot be less than 0");
 		}
 		synchronized (account) {
 			if (account.getBalance().compareTo(amount) < 0) {

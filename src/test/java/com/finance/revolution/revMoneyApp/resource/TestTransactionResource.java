@@ -54,4 +54,40 @@ class TestTransactionResource extends TestResource {
         assertTrue(statusCode == 400);
         assertTrue(responseBody.contains("Failed due to insufficient balance"));
     }
+    
+    @Test
+    public void testNegativeTransfer() throws IOException, URISyntaxException {
+        URI uri = builder.setPath("/transaction").build();
+        BigDecimal amount = new BigDecimal(-120).setScale(4, RoundingMode.HALF_EVEN);
+        Transaction transaction = new Transaction("USD", amount, "1111", "2222");
+
+        String jsonInString = mapper.writeValueAsString(transaction);
+        StringEntity entity = new StringEntity(jsonInString);
+        HttpPost request = new HttpPost(uri);
+        request.setHeader("Content-type", "application/json");
+        request.setEntity(entity);
+        HttpResponse response = client.execute(request);
+        int statusCode = response.getStatusLine().getStatusCode();
+        String responseBody = EntityUtils.toString(response.getEntity());
+        assertTrue(statusCode == 400);
+        assertTrue(responseBody.contains("Amount cannot be less than 0"));
+    }
+    
+    @Test
+    public void testSelfTransfer() throws IOException, URISyntaxException {
+        URI uri = builder.setPath("/transaction").build();
+        BigDecimal amount = new BigDecimal(1900).setScale(4, RoundingMode.HALF_EVEN);
+        Transaction transaction = new Transaction("USD", amount, "1111", "1111");
+
+        String jsonInString = mapper.writeValueAsString(transaction);
+        StringEntity entity = new StringEntity(jsonInString);
+        HttpPost request = new HttpPost(uri);
+        request.setHeader("Content-type", "application/json");
+        request.setEntity(entity);
+        HttpResponse response = client.execute(request);
+        int statusCode = response.getStatusLine().getStatusCode();
+        String responseBody = EntityUtils.toString(response.getEntity());
+        assertTrue(statusCode == 400);
+        assertTrue(responseBody.contains("From and To account cannot be same"));
+    }
 }
