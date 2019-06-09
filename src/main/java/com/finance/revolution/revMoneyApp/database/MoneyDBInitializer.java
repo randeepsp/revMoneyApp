@@ -15,11 +15,6 @@ public class MoneyDBInitializer implements ServletContextListener {
 
 	public void contextInitialized() {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		InputStream is = getClass().getResourceAsStream("/log4j.properties");
-		// BufferedReader reader = new BufferedReader(new
-		// InputStreamReader(is));
-		PropertyConfigurator.configure(is);
-		// PropertyConfigurator.configure("log4j.properties");
 		LOGGER.debug(Thread.currentThread().getStackTrace()[1].getMethodName() + " Starting up! ");
 		DatabaseUtils DBUtil = new DatabaseUtils();
 		DbUtils.loadDriver(DatabaseElements.H2_DRIVER);

@@ -14,8 +14,10 @@ public class TransactionService {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		String currencyType = transaction.getCurrencyType();
 		try {
-			accountData.transferAmount(transaction);
-			return true;
+			synchronized (transaction) {
+				accountData.transferAmount(transaction);
+				return true;
+			}
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}

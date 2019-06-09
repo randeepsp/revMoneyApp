@@ -14,7 +14,6 @@ import com.finance.revolution.revMoneyApp.model.User;
 
 public class UserData {
 	private static final Logger LOGGER = Logger.getLogger(UserData.class);
-	static User userCL;
 
 	public List<User> getAllUsers() throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -129,10 +128,9 @@ public class UserData {
 		Connection conn = null;
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
-		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
-			synchronized (userCL) {
+			synchronized (user) {
 				prepStmt = conn.prepareStatement(DatabaseElements.USER_INSERT);
 				prepStmt.setString(1, user.getPhoneNumber());
 				prepStmt.setString(2, user.getUserName());
@@ -181,10 +179,9 @@ public class UserData {
 		String errorMsg = "";
 		LOGGER.info("UD - updating user with " + user.getPhoneNumber() + " " + user.getUserName() + " "
 				+ user.getEmailId());
-		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
-			synchronized (userCL) {
+			synchronized (user) {
 
 				prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
 				prepStmt.setString(1, user.getPhoneNumber());
@@ -211,10 +208,9 @@ public class UserData {
 		PreparedStatement prepStmt = null;
 		ResultSet rs = null;
 		String errorMsg = "";
-		userCL = user;
 		try {
 			conn = DatabaseUtils.getConnection();
-			synchronized (userCL) {
+			synchronized (user) {
 				prepStmt = conn.prepareStatement(DatabaseElements.USER_UPDATE_BY_ID);
 				prepStmt.setString(1, user.getPhoneNumber());
 				prepStmt.setString(2, user.getUserName());

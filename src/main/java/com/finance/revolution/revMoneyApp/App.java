@@ -1,5 +1,6 @@
 package com.finance.revolution.revMoneyApp;
  
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -17,6 +18,10 @@ import com.finance.revolution.revMoneyApp.resource.UserResource;
  */
 public class App {
 	private static Logger LOGGER = Logger.getLogger(App.class);
+	
+	App(){
+		BasicConfigurator.configure();
+	}
 
 	public static void main(String[] args) throws Exception {
 		LOGGER.info("Initializing the app .....");
@@ -38,6 +43,7 @@ public class App {
 			server.start();
 			server.join();
 		} finally {
+			System.out.println("Server is shutting down");
 			server.destroy();
 		}
 	}

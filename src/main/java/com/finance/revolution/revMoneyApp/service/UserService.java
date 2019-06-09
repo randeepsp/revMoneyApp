@@ -8,7 +8,7 @@ import com.finance.revolution.revMoneyApp.database.UserData;
 import com.finance.revolution.revMoneyApp.model.User;
 
 public class UserService {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(UserService.class);
 
 	UserData userData = new UserData();
@@ -23,34 +23,41 @@ public class UserService {
 		return userData.getAllUsers();
 	}
 
-	public  long createUser(User user) throws Exception {
-		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());		User userExists = getUserByNo(user.getPhoneNumber());
-		if(userExists!=null){
-			throw new Exception("User already exists"); 
+	public long createUser(User user) throws Exception {
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		User userExists = getUserByNo(user.getPhoneNumber());
+		if (userExists != null) {
+			throw new Exception("User already exists");
 		}
-		long id = userData.insertUser(user);
-		return id;
+		synchronized (user) {
+			long id = userData.insertUser(user);
+			return id;
+		}
 	}
 
-	public  User updateUser(String phoneNumber, User user) throws Exception {
+	public User updateUser(String phoneNumber, User user) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User userExists = getUserByNo(phoneNumber);
-		if(userExists==null){
-			throw new Exception("No such user exists"); 
+		if (userExists == null) {
+			throw new Exception("No such user exists");
 		}
-		return userData.updateUserById(userExists.getUserId(), user);
+		synchronized (user) {
+			return userData.updateUserById(userExists.getUserId(), user);
+		}
 	}
 
-	public  boolean deleteUser(String phoneNumber) throws Exception {
+	public boolean deleteUser(String phoneNumber) throws Exception {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User user = getUserByNo(phoneNumber);
-		if(user==null){
-			throw new Exception("No such user exists"); 
+		if (user == null) {
+			throw new Exception("No such user exists");
 		}
-		if(userData.deleteUser(phoneNumber)==0)
-			return false;
-		else
-			return true;
+		synchronized (user) {
+			if (userData.deleteUser(phoneNumber) == 0)
+				return false;
+			else
+				return true;
+		}
 	}
 
 }

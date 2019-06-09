@@ -24,7 +24,9 @@ public class TransactionResource {
 		LOGGER.debug(Thread.currentThread().getStackTrace()[1].getMethodName()+" transfer");
 		boolean transactionResponse;
 		try {
+			synchronized (transaction) {
 			transactionResponse = transactionService.transfer(transaction);
+			}
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

@@ -19,9 +19,6 @@ public class AccountData {
 
 	private static final Logger LOGGER = Logger.getLogger(AccountData.class);
 	UserData userData = new UserData();
-	static Account accountCL;
-	static Account fromAccountCL;
-	static Account toAccountCL;
 
 	public List<Account> getAllAccounts() throws Exception {
 
@@ -88,13 +85,11 @@ public class AccountData {
 		ResultSet rs = null;
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		LOGGER.debug("Attempting to insert " + account);
-		accountCL = account;
-
 		try {
 			conn = DatabaseUtils.getConnection();
 			int rowsChanged;
 			prepStmt = conn.prepareStatement(DatabaseElements.ACCOUNT_CREATE);
-			synchronized (accountCL) {
+			synchronized (account) {
 
 				prepStmt.setString(1, account.getPhoneNumber());
 				prepStmt.setBigDecimal(2, account.getBalance());
@@ -145,10 +140,9 @@ public class AccountData {
 		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
 				+ phoneNumber);
 		try {
-			accountCL = getAccountById(phoneNumber);
-			BigDecimal balance = accountCL.getBalance();
-			synchronized (accountCL) {
-
+			Account account = getAccountById(phoneNumber);
+			BigDecimal balance = account.getBalance();
+			synchronized (account) {
 				LOGGER.debug("Current balance ->" + balance);
 				if (operation.equals("ADD")) {
 					balance = balance.add(amount);
@@ -186,9 +180,9 @@ public class AccountData {
 		LOGGER.debug("Attempting to " + operation + " for amount:" + amount + " of account with phone number ->"
 				+ phoneNumber);
 		try {
-			accountCL = getAccountById(phoneNumber);
-			BigDecimal balance = accountCL.getBalance();
-			synchronized (accountCL) {
+			Account account = getAccountById(phoneNumber);
+			BigDecimal balance = account.getBalance();
+			synchronized (account) {
 				LOGGER.debug("Current balance ->" + balance);
 				if (operation.equals("ADD")) {
 					balance = balance.add(amount);
@@ -230,41 +224,46 @@ public class AccountData {
 		BigDecimal depositAmount = null;
 
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		LOGGER.debug("Transfer amount " + transaction.getAmount() + " from " + transaction.getFromAccount() + " to "
+		LOGGER.debug("Transfer amount " + transaction.getAmount()+ transaction.getCurrencyType() + " from " + transaction.getFromAccount() + " to "
 				+ transaction.getToAccount());
 		try {
-			fromAccount = getAccountById(transaction.getFromAccount());
-			toAccount = getAccountById(transaction.getToAccount());
-			// check if both account exists
-			if (fromAccount == null || toAccount == null)
-				throw new Exception("no such account");
+			synchronized (transaction) {
+				fromAccount = getAccountById(transaction.getFromAccount());
+				toAccount = getAccountById(transaction.getToAccount());
+				// check if both account exists
+				if (fromAccount == null || toAccount == null)
+					throw new Exception("no such account");
 
-			// get currency types
-			fromCurrency = fromAccount.getCurrencyType();
-			toCurrency = toAccount.getCurrencyType();
+				// get currency types
+				fromCurrency = fromAccount.getCurrencyType();
+				toCurrency = toAccount.getCurrencyType();
 
-			// convert amount to fromAccount currency type and toAccount currencyType
-			withdrawAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
-					Currency.getInstance(fromCurrency), transaction.getAmount());
-			depositAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
-					Currency.getInstance(toCurrency), transaction.getAmount());
+				// convert amount to fromAccount currency type and toAccount currencyType
+				/*withdrawAmount = MyCurrencyConverter.convert(Currency.getInstance(fromCurrency),Currency.getInstance(transaction.getCurrencyType()),transaction.getAmount());
+				depositAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
+						Currency.getInstance(toCurrency), transaction.getAmount());*/
 
-			if ((fromAccount.getBalance().subtract(withdrawAmount)).compareTo(new BigDecimal(0)) < 0)
-				throw new Exception("Failed due to insufficient balance");
+				withdrawAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
+						Currency.getInstance(fromCurrency), transaction.getAmount());
+				depositAmount = MyCurrencyConverter.convert(Currency.getInstance(transaction.getCurrencyType()),
+						Currency.getInstance(toCurrency), transaction.getAmount());
+				LOGGER.debug("withdrawAmount="+withdrawAmount+" depositAmount="+depositAmount);
+				LOGGER.debug("Check if "+transaction.getFromAccount()+" with balance "+ fromAccount.getBalance()+" has "+transaction.getAmount()+ " in "+withdrawAmount+" "+transaction.getAmount()+transaction.getCurrencyType());;
+				if ((fromAccount.getBalance().subtract(withdrawAmount)).compareTo(new BigDecimal(0)) < 0)
+					throw new Exception("Failed due to insufficient balance");
 
-			fromAccountCL = fromAccount;
-			toAccountCL = toAccount;
-			conn = DatabaseUtils.getConnection();
-			conn.setAutoCommit(false);
+				conn = DatabaseUtils.getConnection();
+				conn.setAutoCommit(false);
 
-			synchronized (fromAccountCL) {
-				updateAccountBalance(fromAccount.getPhoneNumber(), withdrawAmount, DatabaseElements.ACCOUNT_DEDUCT,
-						conn);
+				synchronized (fromAccount) {
+					updateAccountBalance(fromAccount.getPhoneNumber(), withdrawAmount, DatabaseElements.ACCOUNT_DEDUCT,
+							conn);
+				}
+				synchronized (toAccount) {
+					updateAccountBalance(toAccount.getPhoneNumber(), depositAmount, DatabaseElements.ACCOUNT_ADD, conn);
+				}
+				conn.commit();
 			}
-			synchronized (toAccountCL) {
-				updateAccountBalance(toAccount.getPhoneNumber(), depositAmount, DatabaseElements.ACCOUNT_ADD, conn);
-			}
-			conn.commit();
 			return true;
 
 		} catch (SQLException e) {

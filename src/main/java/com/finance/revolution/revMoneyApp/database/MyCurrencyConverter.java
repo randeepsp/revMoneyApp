@@ -37,7 +37,7 @@ public class MyCurrencyConverter {
 				return convertEUR_to_USD(amount);
 			} else if (output.getCurrencyCode().equals("INR")) {
 				LOGGER.debug("Convert EUR to INR");
-				return new BigDecimal(1).divide(convertINR_to_EUR(amount), 7, RoundingMode.HALF_UP);
+				return convertEUR_to_INR(amount);
 			} else
 				throw new Exception("Currency Not supported");
 		}
@@ -45,29 +45,44 @@ public class MyCurrencyConverter {
 		else if (input.getCurrencyCode().equals("USD")) {
 			if (output.getCurrencyCode().equals("INR")) {
 				LOGGER.debug("Convert USD to INR");
-				return new BigDecimal(1).divide(convertINR_to_USD(amount), 7, RoundingMode.HALF_UP);
+				return convertUSD_to_INR(amount);
 			} else if (output.getCurrencyCode().equals("EUR")) {
 				LOGGER.debug("Convert USD to EUR");
-				return new BigDecimal(1).divide(convertEUR_to_USD(amount), 7, RoundingMode.HALF_UP);
+				return convertUSD_to_EUR(amount);
 			} else
 				throw new Exception("Currency Not supported");
 		} else
 			throw new Exception("Currency Not supported");
 	}
 
-	static BigDecimal convertINR_to_USD(BigDecimal amount) {
+	private static BigDecimal convertUSD_to_INR(BigDecimal amount) {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new BigDecimal(1).multiply(new BigDecimal(0.0144184));
+		return amount.multiply(new BigDecimal(69.3779));
 	}
 
-	static BigDecimal convertEUR_to_USD(BigDecimal amount) {
+	private static BigDecimal convertUSD_to_EUR(BigDecimal amount) {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new BigDecimal(1).multiply(new BigDecimal(1.13369));
+		return amount.multiply(new BigDecimal(0.881692));
 	}
 
-	static BigDecimal convertINR_to_EUR(BigDecimal amount) {
+	private static BigDecimal convertEUR_to_INR(BigDecimal amount) {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new BigDecimal(1).multiply(new BigDecimal(0.0127200));
+		return amount.multiply(new BigDecimal(78.6873));
+	}
+	
+	private static BigDecimal convertINR_to_USD(BigDecimal amount) {
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		return amount.multiply(new BigDecimal(0.0144184));
+	}
+
+	private static BigDecimal convertEUR_to_USD(BigDecimal amount) {
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		return amount.multiply(new BigDecimal(1.13369));
+	}
+
+	private static BigDecimal convertINR_to_EUR(BigDecimal amount) {
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		return amount.multiply(new BigDecimal(0.0127200));
 	}
 
 }

@@ -1,5 +1,5 @@
 package com.finance.revolution.revMoneyApp.resource;
- 
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -90,7 +90,9 @@ public class AccountResource {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		long id;
 		try {
-			id = accountService.createAccount(account);
+			synchronized (account) {
+				id = accountService.createAccount(account);
+			}
 		} catch (Exception e) {
 			return Response.status(Response.Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		}
@@ -106,7 +108,9 @@ public class AccountResource {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		Account account;
 		try {
+
 			account = accountService.deposit(PhoneNumber, amount);
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

@@ -70,7 +70,6 @@ public class Account {
 		int result = 1;
 		result = prime * result + ((PhoneNumber == null) ? 0 : PhoneNumber.hashCode());
 		result = prime * result + (int) (accountId ^ (accountId >>> 32));
-		result = prime * result + ((balance == null) ? 0 : balance.hashCode());
 		result = prime * result + ((currencyType == null) ? 0 : currencyType.hashCode());
 		return result;
 	}
@@ -90,11 +89,6 @@ public class Account {
 		} else if (!PhoneNumber.equals(other.PhoneNumber))
 			return false;
 		if (accountId != other.accountId)
-			return false;
-		if (balance == null) {
-			if (other.balance != null)
-				return false;
-		} else if (!balance.equals(other.balance))
 			return false;
 		if (currencyType == null) {
 			if (other.currencyType != null)

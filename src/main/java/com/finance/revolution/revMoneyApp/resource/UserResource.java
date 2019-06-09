@@ -1,5 +1,5 @@
 package com.finance.revolution.revMoneyApp.resource;
- 
+
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -71,7 +71,9 @@ public class UserResource {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		long id;
 		try {
-			id = userService.createUser(user);
+			synchronized (user) {
+				id = userService.createUser(user);
+			}
 		} catch (Exception e) {
 			return Response.status(Response.Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		}
@@ -89,7 +91,9 @@ public class UserResource {
 		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		User userChanged;
 		try {
-			userChanged = userService.updateUser(phoneNumber, user);
+			synchronized (user) {
+				userChanged = userService.updateUser(phoneNumber, user);
+			}
 		} catch (Exception e) {
 			return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 		}
@@ -104,7 +108,8 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/{phoneNumber}")
 	public Response deleteUser(@PathParam("phoneNumber") String phoneNumber) {
-		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());		boolean deleted = false;
+		LOGGER.debug("Entering " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		boolean deleted = false;
 		try {
 			deleted = userService.deleteUser(phoneNumber);
 		} catch (Exception e) {
